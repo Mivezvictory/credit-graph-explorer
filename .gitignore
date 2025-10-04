@@ -1,0 +1,27 @@
+# ---- Server (.NET / Azure Functions) ----
+server/**/bin/
+server/**/obj/
+server/**/local.settings.json
+server/**/appsettings.*.json
+# Function host artifacts
+server/**/.azurefunctions/
+# User secrets & IDE
+**/*.user
+**/*.suo
+.vscode/
+.idea/
+
+# ---- Client (Vite/React) ----
+client/node_modules/
+client/.pnpm-store/
+client/.yarn/
+client/dist/
+client/.vite/
+client/.DS_Store
+
+# ---- General ----
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
