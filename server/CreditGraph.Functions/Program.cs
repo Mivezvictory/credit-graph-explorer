@@ -1,3 +1,4 @@
+using CreditGraph.Functions.Handlers;
 using CreditGraph.Options;
 using CreditGraph.Services.Implentations;
 using CreditGraph.Services.Interfaces;
@@ -29,7 +30,7 @@ builder.Services.AddHttpClient<IMusicBrainzClient, MusicBrainzClient>((sp, clien
 });
 
 
-
+builder.Services.AddScoped<ISpotifyCallbackHandler, SpotifyCallbackHandler>();
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
