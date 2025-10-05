@@ -1,14 +1,5 @@
-using System;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using CreditGraph.Options;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
@@ -75,12 +66,18 @@ public class SpotifyCallback
 
     }
 
+    /// <summary>
+    /// A helper method that creates a Bad response object 
+    /// </summary>
+    /// <param name="message">The error message</param>
+    /// <param name="errorTitle">The error title</param>
+    /// <returns></returns>
     private IActionResult CreateBadResponse(string message, string errorTitle)
     {
         _logger.LogError(message);
         var errorDetails = new
         {
-            error = "Token_Exchange",
+            error = errorTitle,
             message = message
         };
         return new BadRequestObjectResult(errorDetails);

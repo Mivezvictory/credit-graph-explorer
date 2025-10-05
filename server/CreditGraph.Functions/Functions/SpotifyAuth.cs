@@ -33,16 +33,20 @@ public class SpotifyAuth
 
         try
         {
-            var state = HttpUtility.UrlEncode(req.Query["state"]);
-            var redirectUri = HttpUtility.UrlEncode(_spotify.RedirectUri);
-            var clientId = _spotify.ClientId;
+            var state = req.Query["state"];
+            state = string.IsNullOrEmpty(state) ? "" : Uri.EscapeDataString(state!);
+            //state = Uri.EscapeDataString(req.Query["state"]);
+            var rawRedirect = _spotify?.RedirectUri;
+            var clientId = _spotify?.ClientId;
 
-
-            if (string.IsNullOrEmpty(redirectUri))
+            // Validate raw values before URL-encoding so we can detect missing configuration
+            if (string.IsNullOrEmpty(rawRedirect))
             {
-                _logger.LogError("Spotify RedirectUri is missing or not configured in app settings.");
-                return new BadRequestObjectResult("Spotify redirect URI is not configured.");
+                _logger.LogError("Spotify RedirectUri is missing or not configured in app settings. RawRedirect='{RawRedirect}' ClientId='{ClientId}'", rawRedirect, clientId);
+                return new BadRequestObjectResult("Spotify redirect URI is not configured. Check local.settings.json or environment variables (Spotify__RedirectUri).");
             }
+
+            var redirectUri = Uri.EscapeDataString(rawRedirect);
 
             var url =
                 $"https://accounts.spotify.com/authorize?response_type=code" +
@@ -51,7 +55,7 @@ public class SpotifyAuth
                 $"&scope={HttpUtility.UrlEncode(Scopes)}" +
                 (string.IsNullOrEmpty(state) ? "" : $"&state={state}");
 
-            _logger.LogInformation("Redirecting to Spotify authorize. RedirectUri={RedirectUri}", _spotify.RedirectUri);
+            _logger.LogInformation("Redirecting to Spotify authorize. RedirectUri={RedirectUri}", rawRedirect);
             //var response = req.CreateResponse(HttpStatusCode.Redirect);
             return new RedirectResult(url);
         }

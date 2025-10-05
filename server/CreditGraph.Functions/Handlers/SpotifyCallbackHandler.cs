@@ -35,6 +35,13 @@ public class SpotifyCallbackHandler : ISpotifyCallbackHandler
         return code!;
     }
 
+    /// <summary>
+    /// Exchange spotify authentication code for authentication token
+    /// </summary>
+    /// <param name="code">The authentication code</param>
+    /// <param name="spotify">The SpotifyOptions object containing all spotify related environment variables</param>
+    /// <returns cref="SpotifyTokenResponse">A SpotifyTokenResponse object</returns>
+    /// <exception cref="Exception"></exception>
     public async Task<SpotifyTokenResponse?> ExchangeCodeForTokensAsync(string code, SpotifyOptions spotify)
     {
         var body = new StringBuilder()
@@ -70,6 +77,12 @@ public class SpotifyCallbackHandler : ISpotifyCallbackHandler
         }
     }
 
+    /// <summary>
+    /// A helper method that combines the baseUrl with the provided path
+    /// </summary>
+    /// <param name="baseUrl">The baseUrl</param>
+    /// <param name="path">The intended path to be appended to the baseUrl</param>
+    /// <returns>A string of the combined baseUrl+path</returns>
     public string CombineUrl(string baseUrl, string path)
     {
         if (string.IsNullOrWhiteSpace(path)) return baseUrl;
