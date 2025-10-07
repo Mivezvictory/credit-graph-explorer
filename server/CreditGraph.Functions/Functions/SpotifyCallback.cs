@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using CreditGraph.Domain.Exceptions;
 using CreditGraph.Functions.Handlers;
-using CreditGraph.Domain.Models.Spotify;
+using CreditGraph.Functions.Models.Spotify;
 
 namespace CreditGraph.Functions.Functions;
 /// <summary>

@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-namespace CreditGraph.Domain.Models.Spotify;
+namespace CreditGraph.Functions.Models.Spotify;
 /// <summary>Spotify token payload (snake_case mapped to C#).</summary>
 public sealed class SpotifyTokenResponse
 {

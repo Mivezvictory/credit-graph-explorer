@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using CreditGraph.Domain.Exceptions;
-using CreditGraph.Domain.Models.Spotify;
+using CreditGraph.Functions.Models.Spotify;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json;
