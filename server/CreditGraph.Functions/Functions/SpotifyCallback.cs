@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using CreditGraph.Domain.Exceptions;
+using CreditGraph.Functions.Exceptions;
 using CreditGraph.Functions.Handlers;
 using CreditGraph.Functions.Models.Spotify;
 

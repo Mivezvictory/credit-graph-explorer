@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Http;
-using CreditGraph.Domain.Exceptions;
+using CreditGraph.Functions.Exceptions;
 using CreditGraph.Functions.Models.Spotify;
 using System.Text;
 using System.Net.Http.Headers;

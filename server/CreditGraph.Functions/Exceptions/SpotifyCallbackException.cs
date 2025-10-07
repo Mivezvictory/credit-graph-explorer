@@ -1,4 +1,4 @@
-namespace CreditGraph.Domain.Exceptions
+namespace CreditGraph.Functions.Exceptions
 {
     public class SpotifyCallbackException : Exception
     {
