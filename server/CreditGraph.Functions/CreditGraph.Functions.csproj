@@ -19,7 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\CreditGraph.Services\CreditGraph.Services.csproj" />
     <ProjectReference Include="..\CreditGraph.Domain\CreditGraph.Domain.csproj" />
-    <ProjectReference Include="..\CreditGraph.Infrastructure\CreditGraph.Infrastructure.csproj" />
     <ProjectReference Include="..\CreditGraph.Options\CreditGraph.Options.csproj" />
   </ItemGroup>
 </Project>
