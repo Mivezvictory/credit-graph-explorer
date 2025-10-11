@@ -4,6 +4,10 @@ using System.ComponentModel;
 
 namespace CreditGraph.Services.Implentations;
 
+/// <summary>
+/// phase-1 route: A simple path starting at the root artist
+/// followed by all directly-related artists sorted by Name(then Id as a tie -break)
+/// </summary>
 public sealed class RouteEngine : IRouteEngine
 {
     public Task<IReadOnlyList<ProducerTrailRoute>> GetRoutesAsync(
@@ -37,6 +41,6 @@ public sealed class RouteEngine : IRouteEngine
         var route = new ProducerTrailRoute("Producer Trail (beta)", ordered);
 
         return Task.FromResult<IReadOnlyList<ProducerTrailRoute>>(new[] { route });
-        
+
     }
 }
