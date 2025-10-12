@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using CreditGraph.Domain;
+using CreditGraph.Domain.AlbumModels;
 
 namespace CreditGraph.Services.Interfaces;
 
@@ -33,18 +33,6 @@ public interface ISpotifyClient
         CancellationToken ct = default
     );
 
-    /// <summary>
-    /// Get related Artist details from spotify for provided root artistId
-    /// </summary>
-    /// <param name="artistId">The root artist ID</param>
-    /// <param name="token">Authentication token(base-64) from spotify</param>
-    /// <param name="ct"></param>
-    /// <returns>A list of related artists</returns>
-    Task<List<Artist>> GetRelatedArtistAsync(
-        string artistId,
-        string token,
-        CancellationToken ct = default
-    );
 
     /// <summary>
     /// phase-1: Gets the albums for a provided artistId
@@ -56,7 +44,7 @@ public interface ISpotifyClient
     /// <param name="includeGroups"></param>
     /// <param name="ct"></param>
     /// <returns>Returns a list of album for artistId</returns>
-    Task<List<Album>> GetArtistAlbumsAsync(
+    Task<List<AlbumSimplified>> GetArtistAlbumsAsync(
         string artistId,
         string token,
         int limit,
