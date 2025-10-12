@@ -1,6 +1,6 @@
 using CreditGraph.Services.Interfaces;
 
-namespace CreditGraph.Services.Implentations;
+namespace CreditGraph.Infrastructure.MusicBrainz;
 
 /// <summary>
 /// Default implementation of <see cref="IMusicBrainzClient"/> backed by a typed HttpClient.
