@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CreditGraph.Infrastructure.Spotify;
 using CreditGraph.Infrastructure.MusicBrainz;
+using CreditGraph.Infrastructure.Lastfm;
 
 
 
@@ -37,6 +38,12 @@ builder.Services.AddHttpClient<IMusicBrainzClient, MusicBrainzClient>((sp, clien
     client.BaseAddress = new Uri(opts.BaseUrl);
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
     client.DefaultRequestHeaders.UserAgent.ParseAdd(opts.UserAgent); // MB required
+});
+
+builder.Services.AddHttpClient<ILastfmClient, LastfmClient>(client =>
+{
+    client.BaseAddress = new Uri("http://ws.audioscrobbler.com/2.0/");
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 });
 
 

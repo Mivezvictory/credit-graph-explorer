@@ -10,15 +10,18 @@ namespace CreditGraph.Services.Implentations;
 /// </summary>
 public class GraphBuilder : IGraphBuilder
 {
-    private ISpotifyClient _spotify;
-    private IMusicBrainzClient _mb;
+    private readonly ISpotifyClient _spotify;
+    private readonly ILastfmClient _lastfm;
+    private readonly IMusicBrainzClient _mb;
 
     public GraphBuilder(
         ISpotifyClient spotyfy,
+        ILastfmClient lastfm,
         IMusicBrainzClient mb
     )
     {
         _spotify = spotyfy;
+        _lastfm = lastfm;
         _mb = mb;
     }
 
@@ -31,7 +34,7 @@ public class GraphBuilder : IGraphBuilder
         if (root is null)
             throw new ArtistNotFoundException(artistId);
 
-        var related = await _spotify.GetRelatedArtistAsync(artistId, token, ct);
+        var related = await _lastfm.GetRelatedArtistAsync(root.Name, ct);
 
         var artists = new Dictionary<string, Artist>(StringComparer.Ordinal);
         artists[root.Id] = root;
