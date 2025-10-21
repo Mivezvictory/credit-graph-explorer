@@ -5,7 +5,11 @@ using CreditGraph.Infrastructure.Spotify.DTOs;
 using CreditGraph.Domain;
 using CreditGraph.Domain.AlbumModels;
 using System.Text;
+using System.Net;
 using CreditGraph.Infrastructure.Spotify.QueryObjects;
+using CreditGraph.Services.Contracts;
+using CreditGraph.Infrastructure.Http;
+
 
 
 namespace CreditGraph.Infrastructure.Spotify;
@@ -32,10 +36,21 @@ public class SpotifyClient : ISpotifyClient
     {
         var url = $"me";
         //while (!string.IsNullOrEmpty(url))
-        var userInfo = await GetSpotifyResponseJson<SpotifyUserDto>(url!, token, "get", ct);
-        if (string.IsNullOrEmpty(userInfo.Id))
-            throw new SpotifyProfileInvalidException("Missing 'id' in Spotify /v1/me response.");
-        return userInfo.Id;
+        // var api = await GetSpotifyResponseJson<SpotifyUserDto>(url!, token, "get", ct);
+        // if (api.IsSuccess)
+        // {
+            
+        // }
+        //     return api.Value.Id;
+        // if (string.IsNullOrEmpty(userInfo.Id))
+        //     throw new SpotifyProfileInvalidException("Missing 'id' in Spotify /v1/me response.");
+        // return userInfo.Id;
+        var api = await GetSpotifyResponseJson<SpotifyUserDto>(url!, token, "get", ct);
+        if ((int)api.StatusCode >= 400)
+            throw new SpotifyProfileInvalidException(
+            JsonSerializer.Serialize(new { error = new ErrorShape( 404,$"Missing 'id' in Spotify /v1/me response.") }));
+
+        return api.Value!.Id!;
     }
 
     public async Task<Artist> GetArtistAsync(
@@ -47,7 +62,7 @@ public class SpotifyClient : ISpotifyClient
         var url = $"artists/{artistId}";
 
         //while (!string.IsNullOrEmpty(url))
-        var artist = await GetSpotifyResponseJson<Artist>(url!, token, "get", ct);
+        var api = await GetSpotifyResponseJson<Artist>(url!, token, "get", ct);
 
         //we will always have a valid spotify id 
         //we are handling getting the id on the frontend (we lol, its just me here. Someone is starting to lose it)
@@ -55,7 +70,15 @@ public class SpotifyClient : ISpotifyClient
 
         //any non successful calls will be handled by GetSpotifyResponseJson
         //along with null 
-        return artist;
+        if (!api.IsSuccess)
+        {
+            if ((int)api.StatusCode == 404)
+                throw new SpotifyArtistNotFoundException(CreateErrorMessage(404, $"artist not found for id: {artistId}"));
+        }
+        if(api.Value is null)
+            throw new SpotifyArtistNotFoundException(CreateErrorMessage(404, $"artist not found for id: {artistId}"));
+
+        return api.Value!;
     }
 
     public async Task<List<AlbumSimplified>> GetArtistAlbumsAsync(
@@ -75,7 +98,14 @@ public class SpotifyClient : ISpotifyClient
         //Can ComputeParsedDate be done within the while loop for more efficiency?
         while (!string.IsNullOrEmpty(url))
         {
-            var root = await GetSpotifyResponseJson<AlbumPage>(url!, token, "get", ct);
+            var api = await GetSpotifyResponseJson<AlbumPage>(url!, token, "get", ct);
+
+            if (!api.IsSuccess)
+            {
+                if ((int)api.StatusCode == 404)
+                    throw new SpotifyArtistNotFoundException(CreateErrorMessage(404, $"Artist not found: {artistId}"));
+            }
+            var root = api.Value;
             if (root?.Items != null)
             {
                 results.AddRange(root.Items.Select(AlbumSimplified.From));
@@ -106,10 +136,11 @@ public class SpotifyClient : ISpotifyClient
             isPublic
         );
         var jsonString = JsonSerializer.Serialize(queryBody);
-        var playlist = await GetSpotifyResponseJson<SpotifyCreatePlaylistDto>(url!, token, "post", ct, jsonString);
-        if (string.IsNullOrEmpty(playlist.Id))
-            throw new SpotifyPlaylistException($"Attempts to create {playlistName} Playlist failed.");
-        return playlist.Id;
+        var api = await GetSpotifyResponseJson<SpotifyCreatePlaylistDto>(url!, token, "post", ct, jsonString);
+        if (!api.IsSuccess)
+            throw new SpotifyPlaylistException(CreateErrorMessage(400, $"Attempts to create {playlistName} Playlist failed."));
+        
+        return api.Value!.Id!;
     }
 
     public async Task AddTracksToPlaylistAsync(
@@ -140,7 +171,7 @@ public class SpotifyClient : ISpotifyClient
     /// <param name="httpContent">(Optional) serialized request body</param> 
     /// <returns>Generic type of spotify response JSON as defined by caller</returns>
     /// <exception cref="Exception"></exception>
-    private async Task<T> GetSpotifyResponseJson<T>(string url, string token, string method, CancellationToken ct, string? reqBody = null)
+    private async Task<ApiResult<T>> GetSpotifyResponseJson<T>(string url, string token, string method, CancellationToken ct, string? reqBody = null)
     {
         using var req = new HttpRequestMessage(GetHttpMethod(method), url);
         if (!string.IsNullOrEmpty(reqBody))
@@ -157,55 +188,21 @@ public class SpotifyClient : ISpotifyClient
         using var res = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
         //before we check if the status code is successful, I also want to check for 3 (Spotify) specific status codes
         //401, 403, 429
+        var api = await res.ToApiResultAsync<T>(ct).ConfigureAwait(false);
 
-        if ((int)res.StatusCode == 401 || (int)res.StatusCode == 403)
-            throw new SpotifyUnauthorizedException();
-        if ((int)res.StatusCode == 429)
-            throw new SpotifyRateLimitedException();
-        res.EnsureSuccessStatusCode();
-        var body = await res.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<T>(body, _json);
-
-        return result!;
-
-    }
-
-    /// <summary>
-    /// Overload method to handle calls where no return obj is excpected
-    /// </summary>
-    /// <param name="url"></param>
-    /// <param name="token"></param>
-    /// <param name="method"></param>
-    /// <param name="ct"></param>
-    /// <param name="reqBody"></param>
-    /// <returns></returns>
-    /// <exception cref="SpotifyUnauthorizedException"></exception>
-    /// <exception cref="SpotifyRateLimitedException"></exception>
-    private async Task GetSpotifyResponseJson(string url, string token, string method, CancellationToken ct, string? reqBody = null)
-    {
-        using var req = new HttpRequestMessage(GetHttpMethod(method), url);
-        if (!string.IsNullOrEmpty(reqBody))
+        switch (res.StatusCode)
         {
-            var httpContent = new StringContent(reqBody, Encoding.UTF8, "application/json");
-            req.Content = httpContent;
+            case HttpStatusCode.Unauthorized:   throw new SpotifyUnauthorizedException(CreateErrorMessage(401, $"Token invalid/expired."));
+            case HttpStatusCode.Forbidden:      throw new SpotifyScopeException(CreateErrorMessage(403, $"Missing scope."));
+            case HttpStatusCode.TooManyRequests:           throw new SpotifyRateLimitedException(api.RetryAfter, CreateErrorMessage(429, $"Rate limited"));
+            case HttpStatusCode.BadGateway:
+            case HttpStatusCode.ServiceUnavailable:
+            case HttpStatusCode.GatewayTimeout: throw new SpotifyUnavailableException(CreateErrorMessage(503, "Spotify unavailable."));
         }
 
-        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
-            "Bearer",
-            token
-        );
-
-        using var res = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
-        //before we check if the status code is successful, I also want to check for 3 (Spotify) specific status codes
-        //401, 403, 429
-
-        if ((int)res.StatusCode == 401 || (int)res.StatusCode == 403)
-            throw new SpotifyUnauthorizedException();
-        if ((int)res.StatusCode == 429)
-            throw new SpotifyRateLimitedException();
-        res.EnsureSuccessStatusCode();
+        // Everything else (incl. 200/201/204, and 400/404/409/422…) goes back to caller
+        return api;
     }
-
 
     /// <summary>
     /// Returns Httpmethod matching provided method parameter
@@ -221,6 +218,17 @@ public class SpotifyClient : ISpotifyClient
             "post" => HttpMethod.Post,
             _ => throw new Exception($"Invalid method, {method}, was provided")
         };
+    }
+
+    /// <summary>
+    /// Create a serialized error message of type ErrorShape
+    /// </summary>
+    /// <param name="statusCode"></param>
+    /// <param name="errorMessage"></param>
+    /// <returns>A string of an ErrorShape object</returns>
+    private static string CreateErrorMessage(int statusCode, string errorMessage)
+    {
+        return JsonSerializer.Serialize(new { error = new ErrorShape(statusCode, errorMessage) });
     }
     
 }
