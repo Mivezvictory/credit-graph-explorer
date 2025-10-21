@@ -1,7 +1,5 @@
 using CreditGraph.Services.Interfaces;
 using CreditGraph.Domain;
-using CreditGraph.Domain.Exceptions;
-
 namespace CreditGraph.Services.Implentations;
 
 /// <summary>
@@ -31,9 +29,7 @@ public class GraphBuilder : IGraphBuilder
         CancellationToken ct = default)
     {
         var root = await _spotify.GetArtistAsync(artistId, token, ct);
-        if (root is null)
-            throw new ArtistNotFoundException(artistId);
-
+        
         var related = await _lastfm.GetRelatedArtistAsync(root.Name, ct);
 
         var artists = new Dictionary<string, Artist>(StringComparer.Ordinal);

@@ -8,6 +8,7 @@ public abstract class SpotifyException : Exception
 public sealed class SpotifyUnauthorizedException : SpotifyException
 {
     public SpotifyUnauthorizedException(string message = "Unauthorized") : base(message) { }
+    
 }
 
 public sealed class SpotifyRateLimitedException : SpotifyException
@@ -15,6 +16,12 @@ public sealed class SpotifyRateLimitedException : SpotifyException
     public TimeSpan? RetryAfter { get; }
     public SpotifyRateLimitedException(TimeSpan? retryAfter = null, string message = "Rate limited")
         : base(message) => RetryAfter = retryAfter;
+}
+
+public sealed class SpotifyArtistNotFoundException : SpotifyException
+{
+    public SpotifyArtistNotFoundException(string message)
+    : base(message) { }
 }
 
 public sealed class SpotifyProfileInvalidException : SpotifyException
@@ -30,4 +37,9 @@ public sealed class SpotifyUnavailableException : SpotifyException
 public sealed class SpotifyPlaylistException : SpotifyException
 {
     public SpotifyPlaylistException(string message, Exception? inner = null) : base(message, inner) { }
+}
+
+public sealed class SpotifyScopeException : SpotifyException
+{
+    public SpotifyScopeException(string message = "Missing scope.", Exception? inner = null) : base(message, inner) { }
 }
