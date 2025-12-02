@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Card, CardActionArea, CardContent, CardMedia, Stack, TextField, Typography } from '@mui/material';
-import { buildArtistGraph, getGraphRoutes, createPlaylist } from '../services/backend';
+import { buildArtistGraph, getGraphRoutes } from '../services/backend';
 import { searchArtists } from '../services/spotify';
 import { useAuth } from '../providers/AuthProvider';
 import { ThemeProvider } from '@emotion/react';
@@ -12,8 +12,6 @@ export default function ExplorePage() {
   const [artists, setArtists] = useState<any[]>([]);
   const [graph, setGraph] = useState<any>(null);
   const [routes, setRoutes] = useState<any[]>([]);
-  const [selectedRoute, setSelectedRoute] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
 
   const onSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +22,6 @@ export default function ExplorePage() {
 
   const onBuildGraph = async (artist: any) => {
     if (!token) return;
-    setLoading(true);
     try {
       setGraph(artist);
       const graphData = await buildArtistGraph(token, artist.id);
@@ -33,8 +30,6 @@ export default function ExplorePage() {
     } catch (err) {
       console.error('Error building graph:', err);
       setRoutes([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -85,7 +80,6 @@ export default function ExplorePage() {
                   <Button 
                     variant="contained" 
                     size="small" 
-                    onClick={() => setSelectedRoute(route)}
                     sx={{ textTransform: 'none' }}
                   >
                     View Route
@@ -98,10 +92,4 @@ export default function ExplorePage() {
       </Stack>
     </ThemeProvider>
   );
-}
-
-function getId(uri: string) {
-  if (!uri) return '';
-  if (uri.startsWith('spotify:')) return uri.split(':').pop() ?? '';
-  try { const u = new URL(uri); const parts = u.pathname.split('/').filter(Boolean); const i = parts.indexOf('track'); return i >= 0 ? parts[i+1] : ''; } catch { return uri; }
 }
